@@ -1,0 +1,22 @@
+{
+  "name": "hls-push-pull",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.8.1",
+  "workspaces": [
+    "client",
+    "server",
+    "types"
+  ],
+  "devDependencies": {
+    "turbo": "^2.5.2"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build"
+  }
+}
