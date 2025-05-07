@@ -11,10 +11,14 @@
   "license": "ISC",
   "packageManager": "pnpm@10.8.1",
   "dependencies": {
+    "@hono/node-server": "^1.14.1",
     "hono": "^4.7.8",
-    "types": "workspace:*"
+    "types": "workspace:*",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "fs-extra": "^11.3.0",
     "tsx": "^4.19.4",
     "typescript": "~5.8.3"
   }
