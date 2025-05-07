@@ -22,6 +22,27 @@ app.use(logger())
 
 const api = app.basePath('/api')
 
+setInterval(async () => {
+  console.log('开始定时清理无用的session文件')
+  await fs.ensureDir(sessionsBase)
+
+  const files = await fs.readdir(sessionsBase)
+
+  for (const file of files) {
+    if (!sessionLivings.has(file)) {
+      console.log('删除无用的session', file)
+      await fs.remove(file)
+    }
+    const users = sessionLivings.get(file)
+
+    if (!users || users.size === 0 || !users.has('0')) {
+      console.log('删除无用的session', file)
+      await fs.remove(file)
+    }
+  }
+
+}, 600_000)
+
 
 api.post('session', async (ctx) => {
   let sessionId = getCookie(ctx, 'sessionId') ?? v4()

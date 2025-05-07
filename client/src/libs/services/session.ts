@@ -45,3 +45,13 @@ export function leaveSession(id?: string) {
     body: id ? undefined : id
   })
 }
+
+export function pushSession(id: string, slice: Uint8Array, filename: string) {
+  return ofetch(`/session/${id}/push`, {
+    method: 'post',
+    body: slice,
+    headers: {
+      'x-filename': filename
+    }
+  })
+}
