@@ -14,6 +14,18 @@ importers:
 
   client:
     dependencies:
+      '@ffmpeg/ffmpeg':
+        specifier: ^0.12.15
+        version: 0.12.15
+      '@ffmpeg/util':
+        specifier: ^0.12.2
+        version: 0.12.2
+      '@steveyuowo/vue-hot-toast':
+        specifier: ^1.3.2
+        version: 1.3.2(typescript@5.8.3)
+      '@vueuse/core':
+        specifier: ^13.1.0
+        version: 13.1.0(vue@3.5.13(typescript@5.8.3))
       ofetch:
         specifier: ^1.4.1
         version: 1.4.1
@@ -262,6 +274,18 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@ffmpeg/ffmpeg@0.12.15':
+    resolution: {integrity: sha512-1C8Obr4GsN3xw+/1Ww6PFM84wSQAGsdoTuTWPOj2OizsRDLT4CXTaVjPhkw6ARyDus1B9X/L2LiXHqYYsGnRFw==}
+    engines: {node: '>=18.x'}
+
+  '@ffmpeg/types@0.12.4':
+    resolution: {integrity: sha512-k9vJQNBGTxE5AhYDtOYR5rO5fKsspbg51gbcwtbkw2lCdoIILzklulcjJfIDwrtn7XhDeF2M+THwJ2FGrLeV6A==}
+    engines: {node: '>=16.x'}
+
+  '@ffmpeg/util@0.12.2':
+    resolution: {integrity: sha512-ouyoW+4JB7WxjeZ2y6KpRvB+dLp7Cp4ro8z0HIVpZVCM7AwFlHa0c4R8Y/a4M3wMqATpYKhC7lSFHQ0T11MEDw==}
+    engines: {node: '>=18.x'}
+
   '@hono/node-server@1.14.1':
     resolution: {integrity: sha512-vmbuM+HPinjWzPe7FFPWMMQMsbKE9gDPhaH0FFdqbGpkT5lp++tcWDTxwBl5EgS5y6JVgIaCdjeHRfQ4XRBRjQ==}
     engines: {node: '>=18.14.1'}
@@ -402,6 +426,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@steveyuowo/vue-hot-toast@1.3.2':
+    resolution: {integrity: sha512-sLp46ee8peEOKdYgSzB0Wq7iXsrTJLgmQcC9XombJe8JBAuRwin145dKh9vegS95G3UE7QoNUwFAFgUEAEVOGQ==}
+
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
 
@@ -413,6 +440,9 @@ packages:
 
   '@types/node@22.15.12':
     resolution: {integrity: sha512-K0fpC/ZVeb8G9rm7bH7vI0KAec4XHEhBam616nVJCV51bKzJ6oA3luG4WdKoaztxe70QaNjS/xBmcDLmr4PiGw==}
+
+  '@types/web-bluetooth@0.0.21':
+    resolution: {integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==}
 
   '@unocss/astro@66.1.0':
     resolution: {integrity: sha512-lZmA794RA0D1FQzAef+obM4AKTG1UcQRLexzmIDVTd1CMz847GArUjI7NsOTV0aIVzv9pA18bnHS47ycQsDzuQ==}
@@ -569,6 +599,19 @@ packages:
         optional: true
       vue:
         optional: true
+
+  '@vueuse/core@13.1.0':
+    resolution: {integrity: sha512-PAauvdRXZvTWXtGLg8cPUFjiZEddTqmogdwYpnn60t08AA5a8Q4hZokBnpTOnVNqySlFlTcRYIC8OqreV4hv3Q==}
+    peerDependencies:
+      vue: ^3.5.0
+
+  '@vueuse/metadata@13.1.0':
+    resolution: {integrity: sha512-+TDd7/a78jale5YbHX9KHW3cEDav1lz1JptwDvep2zSG8XjCsVE+9mHIzjTOaPbHUAk5XiE4jXLz51/tS+aKQw==}
+
+  '@vueuse/shared@13.1.0':
+    resolution: {integrity: sha512-IVS/qRRjhPTZ6C2/AM3jieqXACGwFZwWTdw5sNTSKk2m/ZpkuuN+ri+WCVUP8TqaKwJYt/KuMwmXspMAw8E6ew==}
+    peerDependencies:
+      vue: ^3.5.0
 
   acorn@8.14.1:
     resolution: {integrity: sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==}
@@ -1092,6 +1135,14 @@ snapshots:
   '@esbuild/win32-x64@0.25.4':
     optional: true
 
+  '@ffmpeg/ffmpeg@0.12.15':
+    dependencies:
+      '@ffmpeg/types': 0.12.4
+
+  '@ffmpeg/types@0.12.4': {}
+
+  '@ffmpeg/util@0.12.2': {}
+
   '@hono/node-server@1.14.1(hono@4.7.8)':
     dependencies:
       hono: 4.7.8
@@ -1198,6 +1249,12 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.40.2':
     optional: true
 
+  '@steveyuowo/vue-hot-toast@1.3.2(typescript@5.8.3)':
+    dependencies:
+      vue: 3.5.13(typescript@5.8.3)
+    transitivePeerDependencies:
+      - typescript
+
   '@types/estree@1.0.7': {}
 
   '@types/fs-extra@11.0.4':
@@ -1212,6 +1269,8 @@ snapshots:
   '@types/node@22.15.12':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/web-bluetooth@0.0.21': {}
 
   '@unocss/astro@66.1.0(vite@6.3.5(@types/node@22.15.12)(jiti@2.4.2)(tsx@4.19.4))(vue@3.5.13(typescript@5.8.3))':
     dependencies:
@@ -1459,6 +1518,19 @@ snapshots:
   '@vue/tsconfig@0.7.0(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))':
     optionalDependencies:
       typescript: 5.8.3
+      vue: 3.5.13(typescript@5.8.3)
+
+  '@vueuse/core@13.1.0(vue@3.5.13(typescript@5.8.3))':
+    dependencies:
+      '@types/web-bluetooth': 0.0.21
+      '@vueuse/metadata': 13.1.0
+      '@vueuse/shared': 13.1.0(vue@3.5.13(typescript@5.8.3))
+      vue: 3.5.13(typescript@5.8.3)
+
+  '@vueuse/metadata@13.1.0': {}
+
+  '@vueuse/shared@13.1.0(vue@3.5.13(typescript@5.8.3))':
+    dependencies:
       vue: 3.5.13(typescript@5.8.3)
 
   acorn@8.14.1: {}

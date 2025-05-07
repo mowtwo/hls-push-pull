@@ -7,7 +7,7 @@ export interface IResponseError {
   error?: string
 }
 
-export type Response<T extends {}> =
+export type Response<T extends {} = {}> =
   IResponse<T> | IResponseError
 
 export function response<T extends {} = {}>(ok: true, data?: T): IResponse<T>

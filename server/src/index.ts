@@ -5,25 +5,44 @@ import { serve } from "@hono/node-server";
 import { getCookie, setCookie } from "hono/cookie";
 import { streamSSE } from "hono/streaming";
 import { response, entities } from "types";
+import { logger } from "hono/logger";
+import { cors } from "hono/cors";
+import { mimes } from "hono/utils/mime";
+import { extname } from 'node:path'
 
 const sessionsBase = './sessions'
 
 const sessionLivings = new Map<string, Set<string>>()
 
+await fs.ensureDir(sessionsBase)
+
 const app = new Hono()
+
+app.use(logger())
 
 const api = app.basePath('/api')
 
-await fs.ensureDir(sessionsBase)
 
 api.post('session', async (ctx) => {
-  const sessionId = v4()
+  let sessionId = getCookie(ctx, 'sessionId') ?? v4()
+
+  let users = sessionLivings.get(sessionId)
+
+  if (!users) {
+    sessionId = v4()
+    users = new Set(['0'])
+    sessionLivings.set(sessionId, users)
+  }
 
   await fs.ensureDir(`${sessionsBase}/${sessionId}`)
 
-  const users = new Set(['0'])
+  if (!users.has('0')) {
+    users.add('0')
+  }
 
   sessionLivings.set(sessionId, users)
+
+  setCookie(ctx, 'sessionId', sessionId, { httpOnly: true })
 
   return ctx.json(response.ok<entities.PostSessionResponse>(
     {
@@ -102,7 +121,7 @@ api.post('session/:id/delete', async (ctx) => {
   return ctx.json(response.ok())
 })
 
-api.get('session/:id/:file', async (ctx) => {
+api.get('session/:id/:file/pull', async (ctx) => {
   const id = ctx.req.param('id')
   const file = ctx.req.param('file')
   const path = `${sessionsBase}/${id}/${file}`
@@ -126,7 +145,12 @@ api.get('session/:id/events', async (ctx) => {
   return streamSSE(ctx, async (stream) => {
     for (; ;) {
       const users = sessionLivings.get(id)
-      if (!users) {
+      if (!users || !users.has('0')) {
+        await stream.writeSSE({
+          data: '',
+          event: 'close',
+          id: Date.now().toString()
+        })
         await stream.close()
         return
       }
@@ -137,9 +161,52 @@ api.get('session/:id/events', async (ctx) => {
         id: Date.now().toString()
       })
 
-      await stream.sleep(100)
+      await stream.sleep(500)
     }
   })
+})
+
+const wasmBase = './wasm'
+
+const wasm = app.basePath('/wasm')
+
+await fs.ensureDir(wasmBase)
+
+wasm.use(cors())
+
+wasm.get('/', async (ctx) => {
+  const files = await fs.readdir(wasmBase)
+  const baseUrl = new URL('', ctx.req.url).origin
+
+  console.log(baseUrl)
+
+  return ctx.html(`
+    <ul>
+      ${files.map(file => `<li>
+        <a href="${baseUrl}/wasm/${file}">${file}</a>
+        </li>`).join('')}
+    </ul>
+    `)
+})
+
+wasm.get('/:file', async (ctx) => {
+  const file = ctx.req.param('file')
+  const path = `${wasmBase}/${file}`
+
+  if (!await fs.pathExists(path)) {
+    return ctx.json(
+      response.error('文件不存在'),
+      404
+    )
+  }
+
+  return ctx.body(
+    await fs.readFile(path),
+    200,
+    {
+      "Content-Type": mimes[extname(path).slice(1)]
+    }
+  )
 })
 
 serve({
