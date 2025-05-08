@@ -6,9 +6,11 @@ import { getCookie, setCookie } from "hono/cookie";
 import { streamSSE } from "hono/streaming";
 import { response, entities } from "types";
 import { logger } from "hono/logger";
-import { cors } from "hono/cors";
-import { mimes } from "hono/utils/mime";
-import { extname } from 'node:path'
+import { spawn } from 'child_process'
+import { promisify } from "util";
+import { resolve } from 'path'
+
+const spawnAsync = promisify(spawn)
 
 const sessionsBase = './sessions'
 
@@ -78,6 +80,49 @@ api.post('session/:id/push', async (ctx) => {
   const data = await ctx.req.arrayBuffer()
   await fs.writeFile(`${sessionsBase}/${id}/${filename}`, Buffer.from(data))
   return ctx.json(response.ok())
+})
+
+const tempBase = './temp'
+
+await fs.ensureDir(tempBase)
+
+api.post('/session/:id/push2', async (ctx) => {
+  const id = ctx.req.param('id')
+  const filename = ctx.req.header('x-filename')
+  const videoCodec = ctx.req.header('x-ffcv') ?? 'libx264'
+  const audioCodec = ctx.req.header('x-ffca') ?? 'acc'
+  const segDuration = ctx.req.header('x-segd') ?? 1
+  const data = await ctx.req.arrayBuffer()
+
+  const tempName = resolve(`${tempBase}/${id}-${filename}.webm`)
+
+  await fs.writeFile(tempName, new Uint8Array(data))
+
+  const playlistName = resolve(sessionsBase, id, 'index.m3u8')
+
+  await spawnAsync('ffmpeg', [
+    '-i', tempName,
+    '-c:v', videoCodec,
+    '-c:a', audioCodec,
+    '-f', 'hls',
+    '-hls_time', segDuration.toString(),
+    '-hls_list_size', '0',
+    '-hls_flags', 'append_list+omit_endlist',
+    playlistName
+  ], {
+    stdio: 'inherit'
+  })
+
+  // await fs.remove(tempName)
+
+  const playlistContent = await fs.readFile(
+    playlistName,
+    { encoding: 'utf-8' }
+  )
+
+  return ctx.json(response.ok<entities.Push2SessionResponse>({
+    playlistContent
+  }))
 })
 
 api.get('/session/:id/valid', async (ctx) => {

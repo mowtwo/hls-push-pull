@@ -2,9 +2,9 @@
 import { onMounted, onScopeDispose, ref, useTemplateRef } from 'vue';
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { useLayoutStatus, useLayoutTitle } from '../libs/compose/layout';
-import { pushSession } from '../libs/services/session'
+import { push2Session } from '../libs/services/session'
 import { toast } from '@steveyuowo/vue-hot-toast'
-import { buildFFHlsPusher } from '../libs/utils/ffmpeg'
+import { buildFFHlsPusher2 } from '../libs/utils/ffmpeg'
 
 const props = defineProps<{
   stream: MediaStream
@@ -33,8 +33,7 @@ useLayoutTitle('共享屏幕：正在共享中')
 
 useLayoutStatus('actived')
 
-const ffPusher = buildFFHlsPusher(
-  props.ffmpeg,
+const ffPusher = buildFFHlsPusher2(
   new MediaRecorder(props.stream),
   props.stream,
   {
@@ -42,17 +41,21 @@ const ffPusher = buildFFHlsPusher(
   }
 )
 
+
 onMounted(() => {
   if (videoTemp.value) {
     videoTemp.value.srcObject = props.stream
   }
 
   ffPusher.start({
-    pushPlayList(data, name) {
-      pushSession(props.sessionId, data, name)
-    },
-    pushSeg(data, name) {
-      pushSession(props.sessionId, data, name)
+    async pushSeg(data, name, options) {
+      const resp = await push2Session(
+        props.sessionId,
+        data,
+        name,
+        options
+      )
+      console.log(resp)
     },
   })
 })
