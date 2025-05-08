@@ -56,6 +56,34 @@ export function pushSession(id: string, slice: Uint8Array, filename: string) {
   })
 }
 
+export function push2Session(id: string, seg: Uint8Array, filename: string, options?: {
+  videoCodec?: string
+  audioCodec?: string
+  segDuration?: number
+}) {
+  const headers = new Headers({
+    'x-filename': filename
+  })
+
+  if (options?.videoCodec) {
+    headers.append('x-ffcv', options.videoCodec)
+  }
+
+  if (options?.audioCodec) {
+    headers.append('x-ffca', options.audioCodec)
+  }
+
+  if (options?.segDuration) {
+    headers.append('x-segd', options.segDuration.toString())
+  }
+
+  return ofetch<response.Response<entities.Push2SessionResponse>>(`/session/${id}/push2`, {
+    method: 'post',
+    body: seg,
+    headers: headers
+  })
+}
+
 export function validSession(id: string) {
   return ofetch<response.Response>(`/session/${id}/valid`)
 }

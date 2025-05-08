@@ -5,3 +5,7 @@ export interface PostSessionResponse {
 export interface PostJoinResponse {
   userId: string
 }
+
+export interface Push2SessionResponse {
+  playlistContent: string
+}

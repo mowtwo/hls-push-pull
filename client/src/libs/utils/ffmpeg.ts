@@ -82,7 +82,7 @@ export function buildFFHlsPusher(
 
         await ffmpeg.writeFile(segName, await fetchFile(blob))
 
-        console.log('开始转换',segName)
+        console.log('开始转换', segName)
 
         await ffmpeg.exec(
           mergeArgs(
@@ -112,6 +112,77 @@ export function buildFFHlsPusher(
         } finally {
           segIndex++
         }
+      }
+    }
+
+    try {
+      recorder.start(segDuration * 1000)
+    } catch {
+      await startHooks?.recorderDenied?.(async () => {
+        recorder.start(segDuration * 1000)
+      }, recorder, stream)
+    }
+
+
+    return stop
+  }
+
+  return {
+    start, stop
+  }
+}
+
+export function buildFFHlsPusher2(
+  recorder: MediaRecorder,
+  stream: MediaStream,
+  options?: {
+    segDuration?: number
+    videoCodec?: string
+    audioCodec?: string
+    m3u8Name?: string
+  }
+) {
+  const {
+    segDuration = 1,
+    videoCodec = 'libx264',
+    audioCodec = 'acc'
+  } = options ?? {}
+
+  let segIndex = 0
+
+  const stop = () => {
+    recorder.stop()
+    stream.getTracks().forEach(tracker => tracker.stop())
+  }
+
+  const start = async (startHooks?: {
+    recorderStop?: () => void
+    recorderDenied?: (start: () => Promise<void>, recorder: MediaRecorder, stream: MediaStream) => Promise<void> | void
+    pushSeg?: (data: Uint8Array, name: string, options?: {
+      segDuration?: number
+      videoCodec?: string
+      audioCodec?: string
+    }) => Promise<void> | void
+  }) => {
+
+    recorder.onstop = startHooks?.recorderStop!
+
+
+    recorder.ondataavailable = async e => {
+      try {
+        const blob = e.data
+
+        const data = await fetchFile(blob)
+
+        await startHooks?.pushSeg?.(
+          data, segIndex.toString(),
+          {
+            segDuration,
+            audioCodec,
+            videoCodec
+          }
+        )
+      } catch (err) {
       }
     }
 
