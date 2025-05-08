@@ -46,23 +46,13 @@ export function leaveSession(id?: string) {
   })
 }
 
-export function pushSession(id: string, slice: Uint8Array, filename: string) {
-  return ofetch(`/session/${id}/push`, {
-    method: 'post',
-    body: slice,
-    headers: {
-      'x-filename': filename
-    }
-  })
-}
-
-export function push2Session(id: string, seg: Uint8Array, filename: string, options?: {
+export function pushSession(id: string, seg: Uint8Array, index: number, options?: {
   videoCodec?: string
   audioCodec?: string
   segDuration?: number
 }) {
   const headers = new Headers({
-    'x-filename': filename
+    'x-segi': index.toString()
   })
 
   if (options?.videoCodec) {
@@ -77,7 +67,7 @@ export function push2Session(id: string, seg: Uint8Array, filename: string, opti
     headers.append('x-segd', options.segDuration.toString())
   }
 
-  return ofetch<response.Response<entities.Push2SessionResponse>>(`/session/${id}/push2`, {
+  return ofetch<response.Response<entities.Push2SessionResponse>>(`/session/${id}/push`, {
     method: 'post',
     body: seg,
     headers: headers

@@ -1,14 +1,12 @@
 <script lang="ts" setup>
 import { onMounted, onScopeDispose, ref, useTemplateRef } from 'vue';
-import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { useLayoutStatus, useLayoutTitle } from '../libs/compose/layout';
-import { push2Session } from '../libs/services/session'
+import { pushSession } from '../libs/services/session'
 import { toast } from '@steveyuowo/vue-hot-toast'
-import { buildFFHlsPusher2 } from '../libs/utils/ffmpeg'
+import { buildFFHlsPusher } from '../libs/utils/ffmpeg'
 
 const props = defineProps<{
   stream: MediaStream
-  ffmpeg: FFmpeg
   userCount: number
   sessionId: string
 }>()
@@ -33,8 +31,10 @@ useLayoutTitle('共享屏幕：正在共享中')
 
 useLayoutStatus('actived')
 
-const ffPusher = buildFFHlsPusher2(
-  new MediaRecorder(props.stream),
+const ffPusher = buildFFHlsPusher(
+  new MediaRecorder(props.stream, {
+    mimeType: 'video/webm; codecs=vp8,opus'
+  }),
   props.stream,
   {
     segDuration: 1
@@ -47,12 +47,15 @@ onMounted(() => {
     videoTemp.value.srcObject = props.stream
   }
 
+  logs.value.push('开始推流')
+
   ffPusher.start({
-    async pushSeg(data, name, options) {
-      const resp = await push2Session(
+    async pushSeg(data, index, options) {
+      logs.value.push(`推送分片 ${index}`)
+      const resp = await pushSession(
         props.sessionId,
         data,
-        name,
+        index,
         options
       )
       console.log(resp)

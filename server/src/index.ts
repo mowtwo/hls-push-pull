@@ -6,15 +6,15 @@ import { getCookie, setCookie } from "hono/cookie";
 import { streamSSE } from "hono/streaming";
 import { response, entities } from "types";
 import { logger } from "hono/logger";
-import { spawn } from 'child_process'
-import { promisify } from "util";
+import { type ChildProcess, spawn } from 'child_process'
 import { resolve } from 'path'
 
-const spawnAsync = promisify(spawn)
 
 const sessionsBase = './sessions'
 
 const sessionLivings = new Map<string, Set<string>>()
+
+const sessionPipes = new Map<string, ChildProcess>()
 
 await fs.ensureDir(sessionsBase)
 
@@ -74,55 +74,41 @@ api.post('session', async (ctx) => {
   ))
 })
 
-api.post('session/:id/push', async (ctx) => {
+api.post('/session/:id/push', async (ctx) => {
   const id = ctx.req.param('id')
-  const filename = ctx.req.header('x-filename')
-  const data = await ctx.req.arrayBuffer()
-  await fs.writeFile(`${sessionsBase}/${id}/${filename}`, Buffer.from(data))
-  return ctx.json(response.ok())
-})
-
-const tempBase = './temp'
-
-await fs.ensureDir(tempBase)
-
-api.post('/session/:id/push2', async (ctx) => {
-  const id = ctx.req.param('id')
-  const filename = ctx.req.header('x-filename')
+  const segIndex = parseInt(ctx.req.header('x-segi') ?? '0')
   const videoCodec = ctx.req.header('x-ffcv') ?? 'libx264'
-  const audioCodec = ctx.req.header('x-ffca') ?? 'acc'
-  const segDuration = ctx.req.header('x-segd') ?? 1
+  const audioCodec = ctx.req.header('x-ffca') ?? 'aac'
+  const segDuration = parseFloat(ctx.req.header('x-segd') ?? '1')
   const data = await ctx.req.arrayBuffer()
-
-  const tempName = resolve(`${tempBase}/${id}-${filename}.webm`)
-
-  await fs.writeFile(tempName, new Uint8Array(data))
 
   const playlistName = resolve(sessionsBase, id, 'index.m3u8')
 
-  await spawnAsync('ffmpeg', [
-    '-i', tempName,
-    '-c:v', videoCodec,
-    '-c:a', audioCodec,
-    '-f', 'hls',
-    '-hls_time', segDuration.toString(),
-    '-hls_list_size', '0',
-    '-hls_flags', 'append_list+omit_endlist',
-    playlistName
-  ], {
-    stdio: 'inherit'
-  })
+  if (segIndex == 0) {
+    const ff = spawn('ffmpeg', [
+      '-i', 'pipe:0',
+      '-c:v', videoCodec,
+      '-c:a', audioCodec,
+      '-f', 'hls',
+      '-hls_time', segDuration.toString(),
+      '-hls_list_size', '10',
+      '-hls_flags', 'delete_segments',
+      playlistName
+    ])
 
-  // await fs.remove(tempName)
+    ff.stdout.on('data', (chunk) => {
+      console.log('[ffmpeg]', data)
+    })
 
-  const playlistContent = await fs.readFile(
-    playlistName,
-    { encoding: 'utf-8' }
-  )
+    sessionPipes.set(id, ff)
+  }
 
-  return ctx.json(response.ok<entities.Push2SessionResponse>({
-    playlistContent
-  }))
+  const pipe = sessionPipes.get(id)
+  if (pipe) {
+    pipe.stdin?.write(Buffer.from(data))
+  }
+
+  return ctx.json(response.ok())
 })
 
 api.get('/session/:id/valid', async (ctx) => {
@@ -195,6 +181,11 @@ api.post('session/:id/delete', async (ctx) => {
   const id = ctx.req.param('id')
   sessionLivings.delete(id)
   await fs.remove(`${sessionsBase}/${id}`)
+
+  const pipe = sessionPipes.get(id)
+  if (pipe) {
+    pipe.kill()
+  }
 
   return ctx.json(response.ok())
 })

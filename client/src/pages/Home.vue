@@ -5,12 +5,7 @@ import { useSessionEvents } from '../libs/compose/sse'
 import HomePending from './HomePending.vue';
 import { deleteSession } from '../libs/services/session';
 import { useDisplayMedia } from '@vueuse/core'
-import { useFFmpeg } from '../libs/compose/ffmpeg'
-import HomeLoading from './HomeLoading.vue'
 import HomeRecorder from './HomeRecorder.vue';
-
-const { ffmpeg, loading: ffmpegLoading, error: ffmpegError, logs: ffmpegLogs } = useFFmpeg(true)
-
 const {
   sessionId, syncSessionId
 } = useSessionId()
@@ -54,13 +49,8 @@ const handleRecording = async () => {
 </script>
 
 <template>
-  <template v-if="!ffmpeg || ffmpegLoading || ffmpegError">
-    <HomeLoading :error="ffmpegError" :logs="ffmpegLogs" />
-  </template>
-  <template v-else>
-    <HomePending v-if="!isRecording || !recordingStream" :session-id="sessionId" :user-count="userCount"
-      @start="handleRecording" @sync-url="handleSyncUrl" />
-    <HomeRecorder v-else @stop="recordingStop" :ffmpeg="ffmpeg" :stream="recordingStream" :user-count="userCount"
-      :session-id="sessionId" />
-  </template>
+  <HomePending v-if="!isRecording || !recordingStream" :session-id="sessionId" :user-count="userCount"
+    @start="handleRecording" @sync-url="handleSyncUrl" />
+  <HomeRecorder v-else @stop="recordingStop" :stream="recordingStream" :user-count="userCount"
+    :session-id="sessionId" />
 </template>
