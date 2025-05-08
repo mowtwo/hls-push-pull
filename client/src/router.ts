@@ -15,6 +15,10 @@ const router = createRouter({
     {
       path: '/join/:id',
       component: () => import('./pages/Pull.vue')
+    },
+    {
+      path: '/debug-hls',
+      component: () => import.meta.env.DEV ? import('./pages/DebugHls.vue') : import('./pages/Home.vue')
     }
   ]
 })

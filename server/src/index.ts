@@ -8,6 +8,7 @@ import { response, entities } from "types";
 import { logger } from "hono/logger";
 import { type ChildProcess, spawn } from 'child_process'
 import { resolve } from 'path'
+import { cors } from "hono/cors";
 
 
 const sessionsBase = './sessions'
@@ -74,7 +75,7 @@ api.post('session', async (ctx) => {
   ))
 })
 
-api.post('/session/:id/push', async (ctx) => {
+api.post('session/:id/push', async (ctx) => {
   const id = ctx.req.param('id')
   const segIndex = parseInt(ctx.req.header('x-segi') ?? '0')
   const videoCodec = ctx.req.header('x-ffcv') ?? 'libx264'
@@ -111,7 +112,7 @@ api.post('/session/:id/push', async (ctx) => {
   return ctx.json(response.ok())
 })
 
-api.get('/session/:id/valid', async (ctx) => {
+api.get('session/:id/valid', async (ctx) => {
   const id = ctx.req.param('id')
 
   const users = sessionLivings.get(id)
@@ -123,7 +124,7 @@ api.get('/session/:id/valid', async (ctx) => {
   return ctx.json(response.ok())
 })
 
-api.post('/session/:id/join', async (ctx) => {
+api.post('session/:id/join', async (ctx) => {
   const id = ctx.req.param('id')
 
   const users = sessionLivings.get(id)
@@ -156,7 +157,7 @@ api.post('/session/:id/join', async (ctx) => {
   }))
 })
 
-api.post('/session/:id/leave', async (ctx) => {
+api.post('session/:id/leave', async (ctx) => {
   const id = ctx.req.param('id')
 
   const users = sessionLivings.get(id)
@@ -190,24 +191,6 @@ api.post('session/:id/delete', async (ctx) => {
   return ctx.json(response.ok())
 })
 
-api.get('session/:id/:file/pull', async (ctx) => {
-  const id = ctx.req.param('id')
-  const file = ctx.req.param('file')
-  const path = `${sessionsBase}/${id}/${file}`
-  if (await fs.pathExists(path)) {
-    return ctx.body(
-      await fs.readFile(path),
-      200,
-      {
-        'Content-Type': file.endsWith('.m3u8')
-          ? 'application/vnd.apple.mpegurl'
-          : 'video/MP2T'
-      }
-    )
-  }
-
-  return ctx.json(response.error('文件不存在'), 404)
-})
 
 api.get('session/:id/events', async (ctx) => {
   const id = ctx.req.param('id')
@@ -234,6 +217,28 @@ api.get('session/:id/events', async (ctx) => {
     }
   })
 })
+
+api.use('session/:id/pull/:file', cors())
+
+api.get('session/:id/pull/:file', async (ctx) => {
+  const id = ctx.req.param('id')
+  const file = ctx.req.param('file')
+  const path = `${sessionsBase}/${id}/${file}`
+  if (await fs.exists(path)) {
+    return ctx.body(
+      await fs.readFile(path),
+      200,
+      {
+        'Content-Type': file.endsWith('.m3u8')
+          ? 'application/vnd.apple.mpegurl'
+          : 'video/MP2T'
+      }
+    )
+  }
+
+  return ctx.json(response.error('文件不存在'), 404)
+})
+
 
 serve({
   fetch: app.fetch,
