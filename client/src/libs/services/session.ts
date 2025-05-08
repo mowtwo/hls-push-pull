@@ -55,3 +55,20 @@ export function pushSession(id: string, slice: Uint8Array, filename: string) {
     }
   })
 }
+
+export function validSession(id: string) {
+  return ofetch<response.Response>(`/session/${id}/valid`)
+}
+
+export function joinSession(id: string) {
+  return ofetch<response.Response<entities.PostJoinResponse>>(
+    `/session/${id}/join`,
+    {
+      method: 'post'
+    }
+  )
+}
+
+export function pullSession(id: string) {
+
+}

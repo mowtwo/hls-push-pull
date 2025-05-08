@@ -1,5 +1,5 @@
 import { onMounted, ref, shallowRef } from "vue";
-import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { FFmpeg, } from '@ffmpeg/ffmpeg'
 import { toBlobURL } from "@ffmpeg/util";
 
 export function useFFmpeg(mountReady: boolean = false) {
@@ -18,16 +18,21 @@ export function useFFmpeg(mountReady: boolean = false) {
       logs.value.push('开始下载FFmpeg')
 
       ff.on('log', log => {
+        // console.log(log.message)
         logs.value.push(log.message)
+        logs.value = logs.value.slice(-100)
       })
 
-      const baseUrl = 'http://localhost:5556/wasm'
+      const baseUrl = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
 
       await ff.load({
         coreURL: await toBlobURL(baseUrl + '/ffmpeg-core.js', 'text/javascript'),
         wasmURL: await toBlobURL(baseUrl + '/ffmpeg-core.wasm', 'application/wasm'),
-        workerURL: await toBlobURL(baseUrl + '/ffmpeg-core.worker.js', 'text/javascript'),
+        // workerURL: await toBlobURL(baseUrl + '/ffmpeg-core.worker.js', 'text/javascript'),
       })
+
+      // @ts-ignore
+      window.$ff = ff
 
       logs.value.push('FFmpeg组件全部加载完成')
     } catch (e) {

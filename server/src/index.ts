@@ -80,6 +80,18 @@ api.post('session/:id/push', async (ctx) => {
   return ctx.json(response.ok())
 })
 
+api.get('/session/:id/valid', async (ctx) => {
+  const id = ctx.req.param('id')
+
+  const users = sessionLivings.get(id)
+
+  if (!users) {
+    return ctx.json(response.error('会话不存在'), 404)
+  }
+
+  return ctx.json(response.ok())
+})
+
 api.post('/session/:id/join', async (ctx) => {
   const id = ctx.req.param('id')
 
@@ -185,49 +197,6 @@ api.get('session/:id/events', async (ctx) => {
       await stream.sleep(500)
     }
   })
-})
-
-const wasmBase = './wasm'
-
-const wasm = app.basePath('/wasm')
-
-await fs.ensureDir(wasmBase)
-
-wasm.use(cors())
-
-wasm.get('/', async (ctx) => {
-  const files = await fs.readdir(wasmBase)
-  const baseUrl = new URL('', ctx.req.url).origin
-
-  console.log(baseUrl)
-
-  return ctx.html(`
-    <ul>
-      ${files.map(file => `<li>
-        <a href="${baseUrl}/wasm/${file}">${file}</a>
-        </li>`).join('')}
-    </ul>
-    `)
-})
-
-wasm.get('/:file', async (ctx) => {
-  const file = ctx.req.param('file')
-  const path = `${wasmBase}/${file}`
-
-  if (!await fs.pathExists(path)) {
-    return ctx.json(
-      response.error('文件不存在'),
-      404
-    )
-  }
-
-  return ctx.body(
-    await fs.readFile(path),
-    200,
-    {
-      "Content-Type": mimes[extname(path).slice(1)]
-    }
-  )
 })
 
 serve({
