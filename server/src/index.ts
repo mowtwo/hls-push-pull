@@ -90,17 +90,13 @@ api.post('session/:id/push', async (ctx) => {
       '-i', 'pipe:0',
       '-c:v', videoCodec,
       '-c:a', audioCodec,
+      '-preset', 'veryfast',
       '-f', 'hls',
       '-hls_time', segDuration.toString(),
       '-hls_list_size', '10',
-      '-hls_flags', 'delete_segments',
+      '-hls_flags', 'delete_segments+append_list',
       playlistName
     ])
-
-    ff.stdout.on('data', (chunk) => {
-      console.log('[ffmpeg]', data)
-    })
-
     sessionPipes.set(id, ff)
   }
 
